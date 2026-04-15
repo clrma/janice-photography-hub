@@ -91,7 +91,7 @@ function FormattedText({ text }) {
           <div key={i} style={{
             fontSize: 14,
             color: "#1A1A1A",
-            lineHeight: 1.75, textAlign: "left",
+            lineHeight: 1.75, textAlign: "left", fontSize: 16,
             fontFamily: "'Jost', sans-serif",
           }}>{line}</div>
         );
@@ -107,7 +107,7 @@ const S = {
   logo: { width: 38, height: 38, borderRadius: "50%", background: "#B8926A", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17 },
   h1: { fontFamily: "'Playfair Display', serif", fontSize: 20, color: "#FFFFFF", fontWeight: 400 },
   sub: { fontSize: 10, color: "#C4B8B0", letterSpacing: "2px", textTransform: "uppercase", marginTop: 2 },
-  tabs: { display: "flex", overflowX: "auto", scrollbarWidth: "none" },
+  tabs: { display: "flex", overflowX: "auto", scrollbarWidth: "none", justifyContent: "center" },
   tab: (active) => ({
     flexShrink: 0,
     padding: "10px 16px",
