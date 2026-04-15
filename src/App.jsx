@@ -77,7 +77,7 @@ function FormattedText({ text }) {
         if (isHeader) {
           return (
             <div key={i} style={{
-              fontSize: 11,
+              fontSize: 14,
               fontWeight: 700,
               letterSpacing: "1.5px",
               color: "#B8926A",
@@ -112,7 +112,7 @@ const S = {
     flexShrink: 0,
     padding: "10px 16px",
     fontFamily: "'Jost', sans-serif",
-    fontSize: 11,
+    fontSize: 14,
     fontWeight: 600,
     letterSpacing: "1px",
     textTransform: "uppercase",
@@ -137,7 +137,7 @@ const S = {
   formGroup: { marginBottom: 16 },
   label: {
     display: "block",
-    fontSize: 11,
+    fontSize: 14,
     fontWeight: 600,
     letterSpacing: "1px",
     textTransform: "uppercase",
@@ -248,10 +248,10 @@ const S = {
       "Contacted": ["#8A7D72", "#E8E0D8"],
     };
     const [color, bg] = map[status] || ["#8A7D72", "#F5F0EB"];
-    return { fontSize: 11, fontWeight: 600, padding: "4px 12px", borderRadius: 20, background: bg, color, whiteSpace: "nowrap" };
+    return { fontSize: 14, fontWeight: 600, padding: "4px 12px", borderRadius: 20, background: bg, color, whiteSpace: "nowrap" };
   },
   savedTitle: {
-    fontSize: 11,
+    fontSize: 14,
     fontWeight: 600,
     letterSpacing: "1.5px",
     textTransform: "uppercase",
