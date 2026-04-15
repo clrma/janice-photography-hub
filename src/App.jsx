@@ -91,7 +91,7 @@ function FormattedText({ text }) {
           <div key={i} style={{
             fontSize: 14,
             color: "#1A1A1A",
-            lineHeight: 1.75,
+            lineHeight: 1.75, textAlign: "left",
             fontFamily: "'Jost', sans-serif",
           }}>{line}</div>
         );
@@ -103,7 +103,7 @@ function FormattedText({ text }) {
 const S = {
   page: { fontFamily: "'Jost', sans-serif", background: "#FAFAF8", minHeight: "100vh", color: "#1A1A1A" },
   header: { background: "#1A1A1A", padding: "20px 24px 0", position: "sticky", top: 0, zIndex: 50 },
-  headerTop: { display: "flex", alignItems: "center", gap: 14, marginBottom: 18 },
+  headerTop: { display: "flex", alignItems: "center", justifyContent: "center", gap: 14, marginBottom: 18 },
   logo: { width: 38, height: 38, borderRadius: "50%", background: "#B8926A", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17 },
   h1: { fontFamily: "'Playfair Display', serif", fontSize: 20, color: "#FFFFFF", fontWeight: 400 },
   sub: { fontSize: 10, color: "#C4B8B0", letterSpacing: "2px", textTransform: "uppercase", marginTop: 2 },
