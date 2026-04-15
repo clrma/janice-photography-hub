@@ -1,678 +1,657 @@
-import { useState, useEffect } from "react";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Janice C Photography — Command Center</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #2A1F1A;
+  --warm: #F7F2EC;
+  --paper: #FBF8F4;
+  --blush: #D4907A;
+  --rose: #B86B52;
+  --deep: #8B4A35;
+  --mid: #7A6358;
+  --light: #C4AFA6;
+  --border: #E8DDD8;
+  --green: #4A7A5A;
+  --red: #9A3A3A;
+  --gold: #B8922A;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Jost', sans-serif; background: var(--paper); color: var(--ink); min-height: 100vh; }
 
-// --- BRAND ---
-const B = {
-  red: "#C0392B", darkRed: "#922B21", cream: "#FDF8F2",
-  sand: "#E8D5B7", warm: "#F5EDD8", muted: "#9B7E5A",
-  dark: "#2C1A0E", green: "#2E7D52", gold: "#D4860A",
-  softRed: "#FDECEA", softGreen: "#E8F5EE", softGold: "#FEF9E7",
-};
+header {
+  background: var(--ink);
+  padding: 18px 20px 0;
+  position: sticky; top: 0; z-index: 50;
+}
+.header-top { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.logo { width: 36px; height: 36px; border-radius: 50%; background: var(--blush); display: flex; align-items: center; justify-content: center; font-size: 16px; }
+.header-text h1 { font-family: 'Playfair Display', serif; font-size: 18px; color: var(--warm); font-weight: 400; }
+.header-text p { font-size: 10px; color: var(--light); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 1px; }
 
-const TABS = [
-  { id: "ideas",     icon: "💡", label: "Ideas"       },
-  { id: "carousel",  icon: "🎠", label: "Carousel"    },
-  { id: "repurpose", icon: "🔄", label: "Repurpose"   },
-  { id: "pinterest", icon: "📌", label: "Pinterest"   },
-  { id: "freebie",   icon: "🎁", label: "Freebie"     },
-  { id: "tracker",   icon: "📊", label: "Tracker"     },
-  { id: "blog",      icon: "✍️", label: "Blog"        },
-];
+.tabs { display: flex; overflow-x: auto; gap: 0; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  flex-shrink: 0; padding: 10px 14px;
+  font-family: 'Jost', sans-serif; font-size: 11px; font-weight: 500;
+  letter-spacing: 0.8px; text-transform: uppercase;
+  color: var(--light); background: transparent;
+  border: none; border-bottom: 2px solid transparent;
+  cursor: pointer; transition: all 0.2s; white-space: nowrap;
+}
+.tab.active { color: var(--blush); border-bottom: 2px solid var(--blush); }
 
-// --- SHARED HELPERS ---
-async function askClaude(prompt, maxTokens = 900) {
+.section { display: none; padding: 20px 16px 100px; }
+.section.active { display: block; }
+.section-intro { font-size: 13px; color: var(--mid); line-height: 1.6; margin-bottom: 20px; padding: 12px 14px; background: var(--warm); border-radius: 10px; border-left: 3px solid var(--blush); }
+
+.form-group { margin-bottom: 14px; }
+label { display: block; font-size: 10px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; color: var(--mid); margin-bottom: 6px; }
+select, input, textarea {
+  width: 100%; padding: 11px 14px;
+  border: 1px solid var(--border); border-radius: 10px;
+  font-family: 'Jost', sans-serif; font-size: 14px; color: var(--ink);
+  background: white; outline: none; transition: border 0.15s; appearance: none;
+}
+select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%237A6358' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+select:focus, input:focus, textarea:focus { border-color: var(--blush); }
+textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
+.form-row { display: flex; gap: 10px; }
+.form-row .form-group { flex: 1; }
+
+.btn-generate {
+  width: 100%; padding: 14px;
+  background: var(--rose); color: white; border: none;
+  border-radius: 12px; font-family: 'Jost', sans-serif;
+  font-size: 14px; font-weight: 500; cursor: pointer;
+  letter-spacing: 0.5px; transition: all 0.2s; margin-top: 4px;
+}
+.btn-generate:hover { background: var(--deep); }
+
+.btn { font-family: 'Jost', sans-serif; font-size: 12px; font-weight: 500; padding: 7px 14px; border-radius: 8px; border: none; cursor: pointer; transition: all 0.15s; }
+.btn-outline { background: transparent; color: var(--mid); border: 1px solid var(--border); }
+.btn-outline:hover { background: var(--warm); }
+.btn-sm { font-size: 11px; padding: 5px 10px; }
+.btn-copy { background: var(--warm); color: var(--rose); border: 1px solid var(--border); }
+.btn-copy:hover { background: var(--blush); color: white; }
+.btn-save { background: var(--green); color: white; }
+.btn-danger { background: transparent; color: var(--red); border: 1px solid #FDEAEA; }
+
+.result-card {
+  background: white; border: 1px solid var(--border);
+  border-radius: 14px; padding: 18px; margin-top: 16px;
+  animation: fadeUp 0.3s ease;
+}
+@keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.result-title { font-family: 'Playfair Display', serif; font-size: 16px; color: var(--ink); margin-bottom: 12px; }
+.result-body { font-size: 13px; color: var(--mid); line-height: 1.8; white-space: pre-wrap; }
+.result-actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+
+.script-box { background: var(--warm); border-radius: 10px; padding: 14px; margin-top: 12px; border-left: 3px solid var(--blush); }
+.script-label { font-size: 10px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; color: var(--blush); margin-bottom: 8px; }
+
+.tracker-card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 10px; }
+.tracker-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+.tracker-name { font-family: 'Playfair Display', serif; font-size: 16px; color: var(--ink); }
+.tracker-type { font-size: 11px; color: var(--mid); margin-top: 2px; }
+.badge { font-size: 10px; font-weight: 500; padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
+.badge-yes { background: #E8F5E8; color: var(--green); }
+.badge-no { background: #FDEAEA; color: var(--red); }
+.badge-followup { background: #FEF6E4; color: var(--gold); }
+.badge-pending { background: var(--warm); color: var(--mid); }
+.tracker-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; align-items: center; }
+.status-select { padding: 5px 10px; font-size: 11px; border-radius: 8px; border: 1px solid var(--border); background: var(--warm); color: var(--mid); font-family: 'Jost', sans-serif; width: auto; appearance: none; }
+
+.loading { text-align: center; padding: 32px; color: var(--light); }
+.loading-dots { display: inline-flex; gap: 4px; }
+.loading-dots span { width: 6px; height: 6px; border-radius: 50%; background: var(--blush); animation: bounce 1.2s infinite; }
+.loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+.loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes bounce { 0%,80%,100% { transform: scale(0.8); opacity: 0.5; } 40% { transform: scale(1.2); opacity: 1; } }
+
+.saved-section { margin-top: 28px; }
+.saved-title { font-size: 10px; font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase; color: var(--light); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.saved-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.empty { text-align: center; padding: 32px 16px; color: var(--light); font-size: 13px; }
+.empty-icon { font-size: 32px; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div class="logo">📷</div>
+    <div class="header-text">
+      <h1>Janice C Photography</h1>
+      <p>Command Center</p>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('partners',this)">🤝 Partners</button>
+    <button class="tab" onclick="switchTab('content',this)">📸 Content</button>
+    <button class="tab" onclick="switchTab('blog',this)">✍️ Blog</button>
+    <button class="tab" onclick="switchTab('marketing',this)">💡 Marketing</button>
+    <button class="tab" onclick="switchTab('emails',this)">📧 Emails</button>
+    <button class="tab" onclick="switchTab('prep',this)">🎯 Session Prep</button>
+  </div>
+</header>
+
+<!-- PARTNERS -->
+<div id="partners" class="section active">
+  <p class="section-intro">Pick a business type and NoVA area. I will suggest the best partnership approach, what to offer, and give you a script to use.</p>
+  <div class="form-row">
+    <div class="form-group">
+      <label>Business Type</label>
+      <select id="p_type">
+        <option>Toddler Gym</option>
+        <option>Preschool / Montessori</option>
+        <option>Kids Hair Salon</option>
+        <option>Baby Boutique</option>
+        <option>Maternity Boutique</option>
+        <option>Pediatric Dentist</option>
+        <option>Pediatrician Office</option>
+        <option>Prenatal Yoga Studio</option>
+        <option>Kids Art Studio</option>
+        <option>Children's Dance School</option>
+        <option>Baby Gear / Consignment</option>
+        <option>Kids Music Class</option>
+        <option>Postpartum Support Group</option>
+        <option>Mom Play Cafe</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>NoVA Area</label>
+      <select id="p_location">
+        <option>Fairfax</option>
+        <option>Arlington</option>
+        <option>Alexandria</option>
+        <option>Loudoun County</option>
+        <option>Prince William County</option>
+        <option>Reston</option>
+        <option>Herndon</option>
+        <option>Chantilly</option>
+        <option>Ashburn</option>
+        <option>Manassas</option>
+      </select>
+    </div>
+  </div>
+  <button class="btn-generate" onclick="generatePartner()">✨ Generate Partnership Strategy</button>
+  <div id="partnerResult"></div>
+  <div class="saved-section">
+    <div class="saved-title">Saved Partners</div>
+    <div id="partnerTracker"></div>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div id="content" class="section">
+  <p class="section-intro">Pick your content type and platform. I will write a caption in your voice. Warm, real, mom to mom. No fluff.</p>
+  <div class="form-row">
+    <div class="form-group">
+      <label>Content Type</label>
+      <select id="c_type">
+        <option>Candid Family Moment</option>
+        <option>Mama and Me</option>
+        <option>Maternity</option>
+        <option>Behind the Scenes</option>
+        <option>Mini Session Promo</option>
+        <option>Full Session Promo</option>
+        <option>Client Spotlight</option>
+        <option>Personal Mom Life</option>
+        <option>Why Book a Session</option>
+        <option>Outfit Inspiration</option>
+        <option>Location Spotlight</option>
+        <option>Referral Ask</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Platform</label>
+      <select id="c_platform">
+        <option>Instagram</option>
+        <option>Facebook</option>
+        <option>Pinterest</option>
+        <option>Instagram and Facebook</option>
+      </select>
+    </div>
+  </div>
+  <div class="form-group">
+    <label>Any specific detail to include? (optional)</label>
+    <input id="c_detail" placeholder="e.g. spring minis, National Harbor, toddler who wouldn't stop running...">
+  </div>
+  <button class="btn-generate" onclick="generateContent()">✨ Write My Caption</button>
+  <div id="contentResult"></div>
+</div>
+
+<!-- BLOG -->
+<div id="blog" class="section">
+  <p class="section-intro">Story-first blogs that NoVA mamas actually want to read. Real moments, real talk, nothing generic.</p>
+  <div class="form-row">
+    <div class="form-group">
+      <label>Blog Type</label>
+      <select id="b_type">
+        <option>Session Story</option>
+        <option>Personal Mom Story</option>
+        <option>Mom Relatable Post</option>
+        <option>AI Tips for Moms</option>
+        <option>Photography Tips for Clients</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Tone</label>
+      <select id="b_tone">
+        <option>Warm and Honest</option>
+        <option>Funny and Relatable</option>
+        <option>Emotional and Real</option>
+        <option>Helpful and Simple</option>
+      </select>
+    </div>
+  </div>
+  <div class="form-group">
+    <label>What is the story or topic?</label>
+    <textarea id="b_topic" placeholder="e.g. I photographed a family at Great Falls and the toddler cried the whole time and we still got the most beautiful shots..."></textarea>
+  </div>
+  <button class="btn-generate" onclick="generateBlog()">✨ Write My Blog Draft</button>
+  <div id="blogResult"></div>
+</div>
+
+<!-- MARKETING -->
+<div id="marketing" class="section">
+  <p class="section-intro">Pick your session type, season, and goal. I will give you real marketing ideas you can actually do this week.</p>
+  <div class="form-row">
+    <div class="form-group">
+      <label>Session Type</label>
+      <select id="m_session">
+        <option>Mini Session</option>
+        <option>Full Session</option>
+        <option>Maternity</option>
+        <option>Mama and Me</option>
+        <option>All Sessions</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Season or Topic</label>
+      <select id="m_season">
+        <option>Spring</option>
+        <option>Summer</option>
+        <option>Fall</option>
+        <option>Winter</option>
+        <option>Valentine's Day</option>
+        <option>Mother's Day</option>
+        <option>Back to School</option>
+        <option>Christmas / Holiday</option>
+        <option>New Year</option>
+        <option>Evergreen (no season)</option>
+      </select>
+    </div>
+  </div>
+  <div class="form-group">
+    <label>Goal</label>
+    <select id="m_goal">
+      <option>Get Bookings</option>
+      <option>Build Awareness</option>
+      <option>Get Referrals</option>
+      <option>Grow Email List</option>
+      <option>Find Partner Businesses</option>
+      <option>Re-engage Past Clients</option>
+    </select>
+  </div>
+  <button class="btn-generate" onclick="generateMarketing()">✨ Give Me Marketing Ideas</button>
+  <div id="marketingResult"></div>
+</div>
+
+<!-- EMAILS -->
+<div id="emails" class="section">
+  <p class="section-intro">Ready to send emails in your voice. Copy, tweak the names, send. That is it.</p>
+  <div class="form-group">
+    <label>Email Type</label>
+    <select id="e_type">
+      <option>Inquiry Reply</option>
+      <option>Booking Confirmation</option>
+      <option>Session Prep</option>
+      <option>Gallery Delivery</option>
+      <option>Review Ask</option>
+      <option>Referral Ask</option>
+      <option>Follow Up (no response)</option>
+      <option>Rescheduling</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label>Session Type</label>
+    <select id="e_session">
+      <option>Mini Session</option>
+      <option>Full Session</option>
+      <option>Maternity</option>
+      <option>Mama and Me</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label>Any detail to personalize? (optional)</label>
+    <input id="e_detail" placeholder="e.g. client has a 2 year old, session at Great Falls, gallery ready in 2 weeks...">
+  </div>
+  <button class="btn-generate" onclick="generateEmail()">✨ Write My Email</button>
+  <div id="emailResult"></div>
+</div>
+
+<!-- SESSION PREP -->
+<div id="prep" class="section">
+  <p class="section-intro">Fill in the family details and I will write a personal prep guide you can send straight to your client.</p>
+  <div class="form-row">
+    <div class="form-group">
+      <label>Session Type</label>
+      <select id="sp_session">
+        <option>Mini Session</option>
+        <option>Full Session</option>
+        <option>Maternity</option>
+        <option>Mama and Me</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Location Type</label>
+      <select id="sp_location">
+        <option>Outdoor Park</option>
+        <option>Home Studio</option>
+        <option>Backyard</option>
+        <option>Urban / Downtown</option>
+        <option>Beach / Waterfront</option>
+      </select>
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group">
+      <label>Number of Kids</label>
+      <select id="sp_kids">
+        <option>No kids (mama only)</option>
+        <option>1 kid</option>
+        <option>2 kids</option>
+        <option>3 or more kids</option>
+        <option>Newborn</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Youngest Kid Age</label>
+      <select id="sp_age">
+        <option>N/A</option>
+        <option>Newborn (0-3 months)</option>
+        <option>Baby (4-12 months)</option>
+        <option>Toddler (1-3 years)</option>
+        <option>Preschool (3-5 years)</option>
+        <option>School age (6+)</option>
+      </select>
+    </div>
+  </div>
+  <div class="form-group">
+    <label>Vibe or Style</label>
+    <select id="sp_vibe">
+      <option>Light and Airy</option>
+      <option>Warm and Cozy</option>
+      <option>Natural and Earthy</option>
+      <option>Fun and Playful</option>
+      <option>Elegant and Timeless</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label>Anything specific about this family? (optional)</label>
+    <input id="sp_notes" placeholder="e.g. toddler is shy, mama is pregnant, they love being outdoors...">
+  </div>
+  <button class="btn-generate" onclick="generatePrep()">✨ Generate Session Prep Guide</button>
+  <div id="prepResult"></div>
+</div>
+
+<script>
+function loadPartners() { try { return JSON.parse(localStorage.getItem('jcp_p')) || []; } catch { return []; } }
+function savePartners(d) { try { localStorage.setItem('jcp_p', JSON.stringify(d)); } catch {} }
+let savedPartners = loadPartners();
+
+function switchTab(tab, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(tab).classList.add('active');
+  btn.classList.add('active');
+}
+
+function copyText(text) {
+  navigator.clipboard.writeText(text).catch(() => {});
+  alert('Copied!');
+}
+
+function showLoading(id) {
+  document.getElementById(id).innerHTML = `<div class="loading"><div class="loading-dots"><span></span><span></span><span></span></div><p style="margin-top:12px;font-size:13px">Writing just for you...</p></div>`;
+}
+
+async function callClaude(prompt) {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "anthropic-version": "2023-06-01",
-      "anthropic-dangerous-direct-browser-access": "true",
-      "x-api-key": import.meta.env.VITE_ANTHROPIC_API_KEY,
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       model: "claude-sonnet-4-20250514",
-      max_tokens: maxTokens,
-      messages: [{ role: "user", content: prompt }],
-    }),
+      max_tokens: 1000,
+      system: `You are a writing assistant for Janice C Photography, a family portrait photographer in Northern Virginia.
+
+Janice's voice: warm, real, direct, mom to mom. She has a 3 year old toddler. She connects with NoVA mamas who want candid, unhurried, heirloom photos. Not posed. Real moments.
+
+Her brand line: The moments you forgot to notice.
+Mini Session: $249, 20 min, 5 photos. Full Session: $449, 60 min, 10 photos.
+Her edge: She is a mom too. No stress. No posing. Real life, beautifully captured.
+
+Voice rules: Write like a real person talking. Short sentences. Simple words. No flowery AI phrases like cherish or timeless memories or capture the magic. Warm but not dramatic. Direct and honest. Mom to mom energy. Never use dashes in copy.`,
+      messages: [{ role: "user", content: prompt }]
+    })
   });
-  if (!res.ok) {
-    const errData = await res.json().catch(() => ({}));
-    throw new Error(errData?.error?.message || `API error ${res.status}`);
-  }
   const data = await res.json();
-  const text = data.content?.find(b => b.type === "text")?.text || "";
-  const clean = text.replace(/```json[\s\S]*?```|```[\s\S]*?```/g, m =>
-    m.replace(/```json\n?|```\n?/g, "")
-  ).trim();
-  return clean;
+  return data.content[0].text;
 }
 
-const CONTEXT = `Brand: CuriousLittleRed (@curiouslittlered). Solo homeschool mom. Sells Montessori-inspired digital printables (toddler activity pages + seasonal/holiday) on Etsy and her own website. Target: homeschool moms of toddlers ages 2-5. Platforms: TikTok (944 followers, best video 7,878 views - DIY butterfly glue art), Pinterest (299 followers, 130K monthly views, top pin 127K impressions). Content style: fun, playful, colorful, text-overlay videos.`;
+async function generatePartner() {
+  const type = document.getElementById('p_type').value;
+  const loc = document.getElementById('p_location').value;
+  showLoading('partnerResult');
+  try {
+    const result = await callClaude(`Generate a partnership strategy for Janice C Photography to partner with a ${type} in ${loc}, Virginia.
 
-// --- STYLES ---
-const S = {
-  label: { display:"block", fontSize:11, fontWeight:700, color:B.muted, marginBottom:5, textTransform:"uppercase", letterSpacing:0.8 },
-  input: { width:"100%", padding:"10px 13px", borderRadius:10, border:`1.5px solid ${B.sand}`, background:"#fff", fontSize:14, color:B.dark, outline:"none", boxSizing:"border-box", fontFamily:"inherit" },
-  btn: (bg=B.red,fg="#fff") => ({ background:bg, color:fg, border:"none", borderRadius:10, padding:"11px 22px", fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:"inherit", transition:"opacity .15s" }),
-  card: { background:"#fff", border:`1px solid ${B.sand}`, borderRadius:16, padding:"18px 20px", boxShadow:"0 2px 10px rgba(0,0,0,0.05)" },
-  tag: (c) => ({ display:"inline-block", background:c+"18", color:c, fontSize:10, fontWeight:700, borderRadius:5, padding:"2px 7px", marginRight:5, textTransform:"uppercase", letterSpacing:0.5 }),
-  section: { fontWeight:700, fontSize:15, color:B.dark, marginBottom:12, paddingBottom:6, borderBottom:`2px solid ${B.sand}` },
-  pill: (active) => ({ background: active ? B.red : "transparent", color: active ? "#fff" : "rgba(255,255,255,0.7)", border:"none", borderRadius:"8px 8px 0 0", padding:"9px 14px", fontWeight:600, fontSize:12, cursor:"pointer", fontFamily:"inherit", whiteSpace:"nowrap", transition:"all .2s" }),
-  textarea: { width:"100%", padding:"10px 13px", borderRadius:10, border:`1.5px solid ${B.sand}`, background:"#fff", fontSize:14, color:"#2C1A0E", outline:"none", boxSizing:"border-box", fontFamily:"inherit", minHeight:120, resize:"vertical", lineHeight:1.6 },
-};
+Use exactly these headers:
 
-function Spinner({ text="Generating..." }) {
-  return <div style={{ textAlign:"center", padding:"50px 0", color:B.muted, fontSize:14 }}>✨ {text}</div>;
-}
-function Err({ msg }) {
-  return msg ? <div style={{ color:B.red, fontSize:13, marginTop:10 }}>⚠️ {msg}</div> : null;
-}
-function SectionTitle({ children }) {
-  return <div style={S.section}>{children}</div>;
-}
+WHY THIS WORKS
+[2-3 sentences on why this is a great partner. Be specific.]
 
-// --- TAB 1: IDEAS ---
-function IdeasTab() {
-  const [platform, setPlatform] = useState("TikTok");
-  const [type, setType] = useState("DIY Activity");
-  const [ideas, setIdeas] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState("");
+WHAT TO OFFER
+[2-3 concrete offers. Real and specific.]
 
-  const types = ["DIY Activity","Toddler Busy Activity","Morning Routine","Seasonal/Holiday","Montessori Play","Behind the Scenes Mom Life","Printable Showcase"];
+HOW TO APPROACH THEM
+[Walk in, email, or DM? Be specific.]
 
-  async function generate() {
-    setLoading(true); setIdeas([]); setErr("");
-    try {
-      const raw = await askClaude(`${CONTEXT}
+OUTREACH SCRIPT
+[Exact words Janice says or sends. Warm, real, under 5 sentences. No formal language.]`);
 
-Generate 5 TikTok/Pinterest content ideas for platform: ${platform}, type: "${type}".
-
-Key insight: Her best performing content is DIY activities and emotional/surprise hooks (butterfly glue = 7,878 views). NOT product showcases. Lead with a problem homeschool moms have, solve it with an activity, then naturally mention the printable.
-
-Each idea needs a strong 2-second hook (first words they hear/see), body content, and soft CTA to printables.
-
-JSON only: {"ideas":[{"title":"...","hook":"...","body":"...","cta":"...","whyItWorks":"..."}]}`);
-      setIdeas(JSON.parse(raw).ideas || []);
-    } catch(e) { setErr("Could not generate — please try again! " + (e.message||"")); }
-    setLoading(false);
+    const safeResult = result.replace(/`/g, "'").replace(/\\/g, "");
+    document.getElementById('partnerResult').innerHTML = `
+      <div class="result-card">
+        <div class="result-title">${type} in ${loc}</div>
+        <div class="result-body">${result}</div>
+        <div class="result-actions">
+          <button class="btn btn-copy btn-sm" onclick='copyText(${JSON.stringify(result)})'>Copy All</button>
+          <button class="btn btn-save btn-sm" onclick='promptSavePartner(${JSON.stringify(type)}, ${JSON.stringify(loc)}, ${JSON.stringify(safeResult)})'>Save to Tracker</button>
+        </div>
+      </div>`;
+  } catch(e) {
+    document.getElementById('partnerResult').innerHTML = `<div class="result-card"><p style="color:var(--red);font-size:13px">Something went wrong. Try again.</p></div>`;
   }
-
-  return (
-    <div style={{ padding:"24px 0" }}>
-      <p style={{ color:B.muted, fontSize:14, marginBottom:20 }}>Ideas built around what's <strong>actually working</strong> on your account — activity-first, problem-led hooks.</p>
-      <div style={{ display:"flex", gap:10, flexWrap:"wrap", marginBottom:14 }}>
-        <div style={{ flex:1, minWidth:130 }}>
-          <label style={S.label}>Platform</label>
-          <select value={platform} onChange={e=>setPlatform(e.target.value)} style={S.input}>
-            {["TikTok","Instagram Reels","Pinterest"].map(p=><option key={p}>{p}</option>)}
-          </select>
-        </div>
-        <div style={{ flex:2, minWidth:180 }}>
-          <label style={S.label}>Content Type</label>
-          <select value={type} onChange={e=>setType(e.target.value)} style={S.input}>
-            {types.map(t=><option key={t}>{t}</option>)}
-          </select>
-        </div>
-      </div>
-      <button onClick={generate} disabled={loading} style={S.btn()}>✨ Generate 5 Ideas</button>
-      <Err msg={err} />
-      {loading && <Spinner />}
-      {ideas.map((idea,i) => (
-        <div key={i} style={{ ...S.card, marginTop:14 }}>
-          <div style={{ display:"flex", gap:12 }}>
-            <div style={{ background:B.red, color:"#fff", borderRadius:"50%", width:26, height:26, display:"flex", alignItems:"center", justifyContent:"center", fontWeight:700, fontSize:12, flexShrink:0 }}>{i+1}</div>
-            <div style={{ flex:1 }}>
-              <div style={{ fontWeight:700, color:B.dark, fontSize:15, marginBottom:8 }}>{idea.title}</div>
-              <div style={{ marginBottom:5 }}><span style={S.tag("#E74C3C")}>Hook</span><span style={{ fontSize:13, color:B.dark }}>{idea.hook}</span></div>
-              <div style={{ marginBottom:5 }}><span style={S.tag("#8E44AD")}>Body</span><span style={{ fontSize:13, color:B.dark }}>{idea.body}</span></div>
-              <div style={{ marginBottom:5 }}><span style={S.tag(B.red)}>CTA</span><span style={{ fontSize:13, color:B.dark }}>{idea.cta}</span></div>
-              <div style={{ background:B.softGold, borderRadius:8, padding:"7px 10px", fontSize:12, color:B.gold, marginTop:6 }}>💡 {idea.whyItWorks}</div>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
 }
 
-// --- TAB 2: CAROUSEL ---
-function CarouselTab() {
-  const [topic, setTopic] = useState("");
-  const [slides, setSlides] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState("");
-  const colors = [B.red,"#8B4513",B.gold,"#2980B9",B.green,B.dark];
-
-  async function build() {
-    if (!topic.trim()) return;
-    setLoading(true); setSlides([]); setErr("");
-    try {
-      const raw = await askClaude(`${CONTEXT}
-
-Build a 6-slide Instagram/Pinterest carousel about: "${topic}"
-
-Slide 1: Bold hook — a pain point or surprising statement
-Slides 2-5: Value/steps/tips
-Slide 6: Soft sell — mention her printables naturally
-
-JSON only: {"slides":[{"slide":1,"headline":"...","body":"...","visual":"...","designTip":"..."}]}`);
-      setSlides(JSON.parse(raw).slides || []);
-    } catch(e) { setErr("Could not generate — please try again! " + (e.message||"")); }
-    setLoading(false);
-  }
-
-  return (
-    <div style={{ padding:"24px 0" }}>
-      <p style={{ color:B.muted, fontSize:14, marginBottom:20 }}>Turn any topic into a ready-to-design carousel with visual directions for each slide.</p>
-      <div style={{ marginBottom:12 }}>
-        <label style={S.label}>Carousel Topic</label>
-        <input value={topic} onChange={e=>setTopic(e.target.value)} placeholder="e.g. 5 ways to make toddler learning screen-free" style={S.input} onKeyDown={e=>e.key==="Enter"&&build()} />
-      </div>
-      <button onClick={build} disabled={loading||!topic.trim()} style={S.btn()}>🎠 Build Carousel</button>
-      <Err msg={err} />
-      {loading && <Spinner text="Building your carousel..." />}
-      {slides.length > 0 && (
-        <div style={{ marginTop:24, display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(250px,1fr))", gap:14 }}>
-          {slides.map((slide,i) => (
-            <div key={i} style={{ ...S.card, borderTop:`4px solid ${colors[i%colors.length]}`, padding:"16px" }}>
-              <div style={{ fontSize:10, fontWeight:700, color:colors[i%colors.length], textTransform:"uppercase", letterSpacing:1, marginBottom:5 }}>Slide {slide.slide}</div>
-              <div style={{ fontWeight:700, fontSize:14, color:B.dark, marginBottom:7 }}>{slide.headline}</div>
-              <div style={{ fontSize:13, color:"#555", marginBottom:8, lineHeight:1.5 }}>{slide.body}</div>
-              <div style={{ fontSize:12, color:B.muted, background:B.warm, borderRadius:6, padding:"6px 9px", marginBottom:6 }}>🖼️ <em>{slide.visual}</em></div>
-              <div style={{ fontSize:11, color:B.gold, background:B.softGold, borderRadius:6, padding:"5px 9px" }}>✏️ {slide.designTip}</div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
+function promptSavePartner(type, loc, script) {
+  const name = prompt('Business name? (leave blank to use type + area)');
+  const entry = { id: Date.now(), name: name || `${type} in ${loc}`, type, loc, script, status: 'Not Contacted', notes: '' };
+  savedPartners.push(entry);
+  savePartners(savedPartners);
+  renderTracker();
+  alert('Saved!');
 }
 
-// --- TAB 3: REPURPOSE ---
-function RepurposeTab() {
-  const [topic, setTopic] = useState("");
-  const [plan, setPlan] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState("");
-
-  async function build() {
-    if (!topic.trim()) return;
-    setLoading(true); setPlan(null); setErr("");
-    try {
-      const raw = await askClaude(`${CONTEXT}
-
-Create a full repurposing plan for this video topic: "${topic}"
-
-She films ONE video. Turn it into content for: TikTok, Instagram Reels, Instagram Carousel, Pinterest Video Pin, Pinterest Static Pin, and an Etsy listing description angle.
-
-For each platform give: specific caption (ready to copy-paste), hashtags (5-7), and one action tip.
-
-JSON only: {"repurpose":[{"platform":"...","caption":"...","hashtags":["..."],"actionTip":"..."}]}`);
-      setPlan(JSON.parse(raw).repurpose || []);
-    } catch(e) { setErr("Could not generate — please try again! " + (e.message||"")); }
-    setLoading(false);
+function renderTracker() {
+  const el = document.getElementById('partnerTracker');
+  if (!savedPartners.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">🤝</div><p>No partners saved yet.<br>Generate one above and hit Save.</p></div>`;
+    return;
   }
-
-  const platformColors = { "TikTok":"#010101","Instagram Reels":"#C13584","Instagram Carousel":"#E1306C","Pinterest Video Pin":"#E60023","Pinterest Static Pin":"#AD081B","Etsy Listing":"#F1641E" };
-
-  return (
-    <div style={{ padding:"24px 0" }}>
-      <p style={{ color:B.muted, fontSize:14, marginBottom:6 }}>Film <strong>once</strong>, post everywhere. Paste your video topic and get a ready-to-use plan for all 5 platforms + Etsy.</p>
-      <div style={{ background:B.softGold, borderRadius:10, padding:"10px 14px", marginBottom:20, fontSize:13, color:B.gold }}>
-        💡 <strong>Your butterfly video got 7,878 views.</strong> Use this tool to squeeze every last drop from content like that!
-      </div>
-      <div style={{ marginBottom:12 }}>
-        <label style={S.label}>Your Video Topic</label>
-        <input value={topic} onChange={e=>setTopic(e.target.value)} placeholder="e.g. Draw a butterfly with glue then peel it off" style={S.input} onKeyDown={e=>e.key==="Enter"&&build()} />
-      </div>
-      <button onClick={build} disabled={loading||!topic.trim()} style={S.btn()}>🔄 Build Repurposing Plan</button>
-      <Err msg={err} />
-      {loading && <Spinner text="Building your plan across all platforms..." />}
-      {plan && plan.map((p,i) => (
-        <div key={i} style={{ ...S.card, marginTop:14, borderLeft:`4px solid ${platformColors[p.platform]||B.red}` }}>
-          <div style={{ fontWeight:700, color:platformColors[p.platform]||B.red, fontSize:13, marginBottom:8 }}>{p.platform}</div>
-          <div style={{ fontSize:13, color:B.dark, lineHeight:1.6, marginBottom:8, background:B.cream, borderRadius:8, padding:"10px 12px" }}>{p.caption}</div>
-          <div style={{ display:"flex", flexWrap:"wrap", gap:5, marginBottom:8 }}>
-            {p.hashtags?.map((h,j) => <span key={j} style={{ background:B.sand, color:B.muted, fontSize:11, borderRadius:20, padding:"2px 9px" }}>{h}</span>)}
-          </div>
-          <div style={{ fontSize:12, color:B.green, background:B.softGreen, borderRadius:7, padding:"6px 10px" }}>✅ {p.actionTip}</div>
+  const bmap = { 'Not Contacted':'badge-pending','Contacted':'badge-pending','Follow Up':'badge-followup','Yes':'badge-yes','No':'badge-no' };
+  el.innerHTML = savedPartners.map(p => `
+    <div class="tracker-card">
+      <div class="tracker-header">
+        <div>
+          <div class="tracker-name">${p.name}</div>
+          <div class="tracker-type">${p.type} · ${p.loc}</div>
         </div>
-      ))}
-    </div>
-  );
+        <span class="badge ${bmap[p.status]}">${p.status}</span>
+      </div>
+      ${p.notes ? `<div style="font-size:12px;color:var(--mid);margin-bottom:8px;font-style:italic">${p.notes}</div>` : ''}
+      <div class="tracker-actions">
+        <select class="status-select" onchange="updateStatus(${p.id},this.value)">
+          ${['Not Contacted','Contacted','Follow Up','Yes','No'].map(s=>`<option ${p.status===s?'selected':''}>${s}</option>`).join('')}
+        </select>
+        <button class="btn btn-outline btn-sm" onclick="viewScript(${p.id})">Script</button>
+        <button class="btn btn-outline btn-sm" onclick="addNote(${p.id})">Note</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteP(${p.id})">Remove</button>
+      </div>
+    </div>`).join('');
 }
 
-// --- TAB 4: PINTEREST SEO ---
-function PinterestTab() {
-  const [pinTopic, setPinTopic] = useState("");
-  const [result, setResult] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState("");
-  const [copied, setCopied] = useState("");
-
-  async function generate() {
-    if (!pinTopic.trim()) return;
-    setLoading(true); setResult(null); setErr("");
-    try {
-      const raw = await askClaude(`${CONTEXT}
-
-Her Pinterest has 130K monthly views. Top pin: "Build, Stack, Learn! Wooden Puzzle" with 127,007 impressions — but it's an Amazon affiliate pin with 0 sales. She needs to redirect traffic to her OWN Etsy printables.
-
-Generate Pinterest SEO content for this pin topic: "${pinTopic}"
-
-Include:
-- Pin title (max 100 chars, keyword-rich)
-- Pin description (150-300 chars, conversational, keywords woven in naturally)
-- 10 keywords/search terms homeschool moms actually type
-- Board name suggestion
-- One tip to link this to her Etsy
-
-JSON only: {"title":"...","description":"...","keywords":["..."],"boardName":"...","etsyTip":"..."}`);
-      setResult(JSON.parse(raw));
-    } catch(e) { setErr("Could not generate — please try again! " + (e.message||"")); }
-    setLoading(false);
-  }
-
-  function copy(text, key) {
-    navigator.clipboard.writeText(text);
-    setCopied(key);
-    setTimeout(() => setCopied(""), 2000);
-  }
-
-  return (
-    <div style={{ padding:"24px 0" }}>
-      <div style={{ background:B.softRed, borderRadius:12, padding:"12px 16px", marginBottom:20, fontSize:13, color:B.red }}>
-        🚨 <strong>Your 127K impression pin has 0 Etsy sales.</strong> This tool writes SEO descriptions that send Pinterest moms directly to YOUR products — not Amazon.
-      </div>
-      <div style={{ marginBottom:12 }}>
-        <label style={S.label}>Pin Topic</label>
-        <input value={pinTopic} onChange={e=>setPinTopic(e.target.value)} placeholder="e.g. Montessori toddler activity with wooden puzzle" style={S.input} onKeyDown={e=>e.key==="Enter"&&generate()} />
-      </div>
-      <button onClick={generate} disabled={loading||!pinTopic.trim()} style={S.btn("#E60023")}>📌 Generate Pinterest SEO</button>
-      <Err msg={err} />
-      {loading && <Spinner text="Writing your SEO content..." />}
-      {result && (
-        <div style={{ marginTop:22 }}>
-          {[
-            { label:"📌 Pin Title", key:"title", val:result.title },
-            { label:"📝 Pin Description", key:"description", val:result.description },
-          ].map(({label,key,val}) => (
-            <div key={key} style={{ ...S.card, marginBottom:12 }}>
-              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
-                <div style={{ fontWeight:700, color:B.dark, fontSize:13 }}>{label}</div>
-                <button onClick={()=>copy(val,key)} style={{ ...S.btn(copied===key?B.green:B.sand, copied===key?"#fff":B.muted), padding:"5px 12px", fontSize:11 }}>{copied===key?"✅ Copied!":"Copy"}</button>
-              </div>
-              <div style={{ fontSize:13, color:"#444", lineHeight:1.6, background:B.cream, borderRadius:8, padding:"10px 12px" }}>{val}</div>
-            </div>
-          ))}
-          <div style={{ ...S.card, marginBottom:12 }}>
-            <div style={{ fontWeight:700, color:B.dark, fontSize:13, marginBottom:10 }}>🔍 Keywords to Use</div>
-            <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
-              {result.keywords?.map((k,i) => (
-                <span key={i} onClick={()=>copy(k,`kw${i}`)} style={{ background:copied===`kw${i}`?B.green:B.sand, color:copied===`kw${i}`?"#fff":B.muted, fontSize:12, borderRadius:20, padding:"4px 11px", cursor:"pointer", transition:"all .2s" }}>{k}</span>
-              ))}
-            </div>
-            <div style={{ fontSize:11, color:B.muted, marginTop:8 }}>Tap any keyword to copy it</div>
-          </div>
-          <div style={{ ...S.card, marginBottom:12 }}>
-            <div style={{ fontWeight:700, color:B.dark, fontSize:13, marginBottom:5 }}>📋 Suggested Board Name</div>
-            <div style={{ fontSize:13, color:"#444", background:B.cream, borderRadius:8, padding:"9px 12px" }}>{result.boardName}</div>
-          </div>
-          <div style={{ background:B.softGreen, borderRadius:12, padding:"12px 16px", fontSize:13, color:B.green }}>
-            💸 <strong>Etsy Link Tip:</strong> {result.etsyTip}
-          </div>
-        </div>
-      )}
-    </div>
-  );
+function updateStatus(id, status) {
+  savedPartners = savedPartners.map(p => p.id===id ? {...p,status} : p);
+  savePartners(savedPartners); renderTracker();
+}
+function viewScript(id) { const p = savedPartners.find(x=>x.id===id); if(p) alert(p.script); }
+function addNote(id) {
+  const note = prompt('Add a note:');
+  if(note!==null) { savedPartners = savedPartners.map(p=>p.id===id?{...p,notes:note}:p); savePartners(savedPartners); renderTracker(); }
+}
+function deleteP(id) {
+  if(!confirm('Remove this partner?')) return;
+  savedPartners = savedPartners.filter(p=>p.id!==id); savePartners(savedPartners); renderTracker();
 }
 
-// --- TAB 5: FREEBIE FUNNEL ---
-function FreebieTab() {
-  const [plan, setPlan] = useState(null);
-  const [loading, setLoading] = useState(false);
-
-  async function generate() {
-    setLoading(true); setPlan(null);
-    try {
-      const raw = await askClaude(`${CONTEXT}
-
-She has 130K Pinterest monthly views and needs to convert them into an email list and eventually Etsy buyers. Design a freebie lead magnet funnel specifically for CuriousLittleRed.
-
-Create:
-1. 3 freebie ideas (free printables she could offer) that homeschool moms would want badly enough to give their email
-2. For the best freebie: the pin title + description to promote it
-3. What to put in the thank-you email after they download
-4. What to send in email #2 (3 days later) to softly sell a paid printable
-5. One sentence explaining why this beats Amazon affiliate income
-
-JSON only: {"freebieIdeas":[{"name":"...","why":"...","whatToInclude":"..."}],"bestFreebie":"...","pinPromo":{"title":"...","description":"..."},"thankYouEmail":{"subject":"...","body":"..."},"followUpEmail":{"subject":"...","body":"..."},"whyBetter":"..."}`);
-      setPlan(JSON.parse(raw));
-    } catch {}
-    setLoading(false);
-  }
-
-  useEffect(() => { generate(); }, []);
-
-  if (loading) return <Spinner text="Building your freebie funnel..." />;
-  if (!plan) return <button onClick={generate} style={{ ...S.btn(), marginTop:24 }}>Load Freebie Plan</button>;
-
-  return (
-    <div style={{ padding:"24px 0" }}>
-      <div style={{ background:B.softGreen, borderRadius:12, padding:"12px 16px", marginBottom:20, fontSize:13, color:B.green }}>
-        💸 <strong>Why this beats Amazon affiliates:</strong> {plan.whyBetter}
-      </div>
-      <SectionTitle>🎁 3 Freebie Ideas for Your Email List</SectionTitle>
-      {plan.freebieIdeas?.map((f,i) => (
-        <div key={i} style={{ ...S.card, marginBottom:12, borderLeft:`4px solid ${i===0?B.red:B.sand}` }}>
-          <div style={{ display:"flex", gap:8, alignItems:"flex-start" }}>
-            {i===0 && <span style={{ background:B.red, color:"#fff", fontSize:10, fontWeight:700, borderRadius:5, padding:"2px 7px", flexShrink:0 }}>BEST</span>}
-            <div>
-              <div style={{ fontWeight:700, color:B.dark, fontSize:14, marginBottom:5 }}>{f.name}</div>
-              <div style={{ fontSize:13, color:"#555", marginBottom:5 }}>{f.why}</div>
-              <div style={{ fontSize:12, color:B.muted, background:B.warm, borderRadius:7, padding:"6px 10px" }}>📄 Include: {f.whatToInclude}</div>
-            </div>
-          </div>
+async function generateContent() {
+  const type = document.getElementById('c_type').value;
+  const platform = document.getElementById('c_platform').value;
+  const detail = document.getElementById('c_detail').value;
+  showLoading('contentResult');
+  try {
+    const result = await callClaude(`Write a ${platform} caption for Janice C Photography about: ${type}.
+${detail ? 'Extra detail: ' + detail : ''}
+Rules: In Janice's voice. Warm, real, mom to mom. Not salesy. ${platform==='Pinterest'?'Pinterest style: descriptive, 2-3 sentences, 5 hashtags.':'Instagram style: conversational, 3-5 sentences, soft call to action, 5-8 hashtags on new line.'} Include NoVA hashtags. No dashes. Sound like a real person. Write caption only, no intro.`);
+    document.getElementById('contentResult').innerHTML = `
+      <div class="result-card">
+        <div class="result-title">${type} · ${platform}</div>
+        <div class="result-body">${result}</div>
+        <div class="result-actions">
+          <button class="btn btn-copy btn-sm" onclick='copyText(${JSON.stringify(result)})'>Copy Caption</button>
+          <button class="btn btn-outline btn-sm" onclick="generateContent()">Try Again</button>
         </div>
-      ))}
-      <SectionTitle style={{ marginTop:24 }}>📌 Pinterest Pin to Promote Your Freebie</SectionTitle>
-      <div style={{ ...S.card, marginBottom:20 }}>
-        <div style={{ fontWeight:700, color:"#E60023", fontSize:13, marginBottom:5 }}>Pin Title</div>
-        <div style={{ fontSize:13, color:B.dark, background:B.cream, borderRadius:8, padding:"9px 12px", marginBottom:12 }}>{plan.pinPromo?.title}</div>
-        <div style={{ fontWeight:700, color:"#E60023", fontSize:13, marginBottom:5 }}>Pin Description</div>
-        <div style={{ fontSize:13, color:B.dark, background:B.cream, borderRadius:8, padding:"9px 12px" }}>{plan.pinPromo?.description}</div>
-      </div>
-      <SectionTitle>📧 Email #1 — Thank You Email (Instant)</SectionTitle>
-      <div style={{ ...S.card, marginBottom:12 }}>
-        <div style={{ fontWeight:700, color:B.dark, fontSize:12, marginBottom:4 }}>Subject: {plan.thankYouEmail?.subject}</div>
-        <div style={{ fontSize:13, color:"#555", lineHeight:1.6, background:B.cream, borderRadius:8, padding:"10px 12px", whiteSpace:"pre-wrap" }}>{plan.thankYouEmail?.body}</div>
-      </div>
-      <SectionTitle>📧 Email #2 — Soft Sell (3 Days Later)</SectionTitle>
-      <div style={{ ...S.card, marginBottom:12 }}>
-        <div style={{ fontWeight:700, color:B.dark, fontSize:12, marginBottom:4 }}>Subject: {plan.followUpEmail?.subject}</div>
-        <div style={{ fontSize:13, color:"#555", lineHeight:1.6, background:B.cream, borderRadius:8, padding:"10px 12px", whiteSpace:"pre-wrap" }}>{plan.followUpEmail?.body}</div>
-      </div>
-      <button onClick={generate} style={{ ...S.btn("transparent",B.red), border:`2px solid ${B.red}`, marginTop:4 }}>🔄 Regenerate Plan</button>
-    </div>
-  );
+      </div>`;
+  } catch(e) {
+    document.getElementById('contentResult').innerHTML = `<div class="result-card"><p style="color:var(--red);font-size:13px">Something went wrong. Try again.</p></div>`;
+  }
 }
 
-// --- TAB 6: TRACKER ---
-const STORE_KEY = "clr_v2_posts";
-
-function TrackerTab() {
-  const [posts, setPosts] = useState(() => { try { return JSON.parse(localStorage.getItem(STORE_KEY)||"[]"); } catch { return []; } });
-  const [form, setForm] = useState({ platform:"TikTok", title:"", views:"", likes:"", comments:"", saves:"", date:new Date().toISOString().slice(0,10) });
-  const [showForm, setShowForm] = useState(false);
-  const [insights, setInsights] = useState([]);
-  const [loadingInsights, setLoadingInsights] = useState(false);
-
-  function save() {
-    if (!form.title) return;
-    const updated = [{ ...form, id:Date.now(), views:+form.views||0, likes:+form.likes||0, comments:+form.comments||0, saves:+form.saves||0 }, ...posts];
-    setPosts(updated);
-    localStorage.setItem(STORE_KEY, JSON.stringify(updated));
-    setForm({ platform:"TikTok", title:"", views:"", likes:"", comments:"", saves:"", date:new Date().toISOString().slice(0,10) });
-    setShowForm(false);
+async function generateBlog() {
+  const type = document.getElementById('b_type').value;
+  const tone = document.getElementById('b_tone').value;
+  const topic = document.getElementById('b_topic').value;
+  if (!topic.trim()) { alert('Tell me what the blog is about first.'); return; }
+  showLoading('blogResult');
+  try {
+    const result = await callClaude(`Write a ${tone} ${type} blog post for Janice C Photography.
+Topic: ${topic}
+Rules: First person as Janice. Story-first, start with a real moment. NoVA mamas should read this and think she gets me. 400-600 words. Short paragraphs max 3 sentences. No fluff. End with soft human call to action. No dashes. Include a title at top.`);
+    document.getElementById('blogResult').innerHTML = `
+      <div class="result-card">
+        <div class="result-body">${result}</div>
+        <div class="result-actions">
+          <button class="btn btn-copy btn-sm" onclick='copyText(${JSON.stringify(result)})'>Copy Draft</button>
+          <button class="btn btn-outline btn-sm" onclick="generateBlog()">Try Again</button>
+        </div>
+      </div>`;
+  } catch(e) {
+    document.getElementById('blogResult').innerHTML = `<div class="result-card"><p style="color:var(--red);font-size:13px">Something went wrong. Try again.</p></div>`;
   }
-
-  function remove(id) {
-    const updated = posts.filter(p=>p.id!==id);
-    setPosts(updated);
-    localStorage.setItem(STORE_KEY, JSON.stringify(updated));
-  }
-
-  async function getInsights() {
-    if (!posts.length) return;
-    setLoadingInsights(true); setInsights([]);
-    try {
-      const summary = posts.slice(0,10).map(p=>`"${p.title}" on ${p.platform}: ${p.views} views, ${p.likes} likes, ${p.comments} comments, ${p.saves} saves`).join("\n");
-      const raw = await askClaude(`${CONTEXT}
-
-Analyze this post performance data and give 4 short, actionable insights for CuriousLittleRed. Be specific. Compare to her known best performer (butterfly DIY = 7,878 views). Tell her what to do MORE of and what to stop.\n\n${summary}\n\nJSON only: {"insights":["...","...","...","..."]}`);
-      setInsights(JSON.parse(raw).insights||[]);
-    } catch { setInsights(["Could not load insights. Try again!"]); }
-    setLoadingInsights(false);
-  }
-
-  const totalViews = posts.reduce((a,p)=>a+p.views,0);
-  const topPost = posts.length ? posts.reduce((a,b)=>a.views>b.views?a:b) : null;
-
-  return (
-    <div style={{ padding:"24px 0" }}>
-      <p style={{ color:B.muted, fontSize:14, marginBottom:18 }}>Log your posts and get AI analysis on what's actually working for CuriousLittleRed.</p>
-      {posts.length > 0 && (
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10, marginBottom:20 }}>
-          {[["Posts Logged", posts.length,"📝"],["Total Views",totalViews.toLocaleString(),"👁️"],["Top Post",topPost?.views.toLocaleString()||"-","🔥"]].map(([l,v,ic])=>(
-            <div key={l} style={{ background:B.cream, border:`1px solid ${B.sand}`, borderRadius:12, padding:"12px", textAlign:"center" }}>
-              <div style={{ fontSize:20 }}>{ic}</div>
-              <div style={{ fontSize:20, fontWeight:700, color:B.red }}>{v}</div>
-              <div style={{ fontSize:11, color:B.muted }}>{l}</div>
-            </div>
-          ))}
-        </div>
-      )}
-      <div style={{ display:"flex", gap:10, marginBottom:20, flexWrap:"wrap" }}>
-        <button onClick={()=>setShowForm(!showForm)} style={S.btn()}>+ Log Post</button>
-        {posts.length > 0 && <button onClick={getInsights} disabled={loadingInsights} style={S.btn(B.green)}>{loadingInsights?"Analyzing...":"🔍 AI Insights"}</button>}
-      </div>
-      {showForm && (
-        <div style={{ ...S.card, marginBottom:18 }}>
-          <div style={{ fontWeight:700, color:B.dark, marginBottom:14 }}>Log a New Post</div>
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
-            <div>
-              <label style={S.label}>Platform</label>
-              <select value={form.platform} onChange={e=>setForm({...form,platform:e.target.value})} style={S.input}>
-                {["TikTok","Instagram Reels","Pinterest","Instagram Carousel"].map(p=><option key={p}>{p}</option>)}
-              </select>
-            </div>
-            <div>
-              <label style={S.label}>Date</label>
-              <input type="date" value={form.date} onChange={e=>setForm({...form,date:e.target.value})} style={S.input} />
-            </div>
-            <div style={{ gridColumn:"1/-1" }}>
-              <label style={S.label}>Post Title / Topic</label>
-              <input value={form.title} onChange={e=>setForm({...form,title:e.target.value})} placeholder="What was the post about?" style={S.input} />
-            </div>
-            {[["views","👁️ Views"],["likes","❤️ Likes"],["comments","💬 Comments"],["saves","🔖 Saves"]].map(([k,l])=>(
-              <div key={k}>
-                <label style={S.label}>{l}</label>
-                <input type="number" value={form[k]} onChange={e=>setForm({...form,[k]:e.target.value})} placeholder="0" style={S.input} />
-              </div>
-            ))}
-          </div>
-          <button onClick={save} style={{ ...S.btn(), marginTop:14 }}>Save Post</button>
-        </div>
-      )}
-      {insights.length > 0 && (
-        <div style={{ ...S.card, background:B.softGreen, borderColor:B.green, marginBottom:16 }}>
-          <div style={{ fontWeight:700, color:B.green, marginBottom:10 }}>🔍 AI Insights for CuriousLittleRed</div>
-          {insights.map((ins,i)=><div key={i} style={{ fontSize:13, color:B.dark, marginBottom:7 }}>• {ins}</div>)}
-        </div>
-      )}
-      {posts.length === 0 && <div style={{ textAlign:"center", color:B.muted, padding:"40px 0", fontSize:14 }}>No posts yet. Log your first one! 📝</div>}
-      {posts.map(p=>(
-        <div key={p.id} style={{ ...S.card, display:"flex", justifyContent:"space-between", marginBottom:10 }}>
-          <div>
-            <div style={{ fontWeight:600, color:B.dark, marginBottom:3 }}>{p.title}</div>
-            <div style={{ fontSize:11, color:B.muted, marginBottom:6 }}>{p.platform} · {p.date}</div>
-            <div style={{ display:"flex", gap:12, fontSize:12 }}>
-              <span>👁️ {p.views?.toLocaleString()}</span>
-              <span>❤️ {p.likes}</span>
-              <span>💬 {p.comments}</span>
-              <span>🔖 {p.saves}</span>
-            </div>
-          </div>
-          <button onClick={()=>remove(p.id)} style={{ background:"none", border:"none", cursor:"pointer", color:"#ccc", fontSize:18, alignSelf:"flex-start" }}>x</button>
-        </div>
-      ))}
-    </div>
-  );
 }
 
-// --- TAB 7: BLOG ---
-function BlogTab() {
-  const [topic, setTopic] = useState("");
-  const [suggestions, setSuggestions] = useState([]);
-  const [post, setPost] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
-  const [err, setErr] = useState("");
-  const [copied, setCopied] = useState(false);
-
-  async function getSuggestions() {
-    setLoadingSuggestions(true); setSuggestions([]); setErr("");
-    try {
-      const raw = await askClaude(`${CONTEXT}
-
-Suggest 6 blog post topics for CuriousLittleRed's website. Topics should help homeschool moms of toddlers, naturally lead to her printables, and be good for Pinterest SEO.
-
-JSON only: {"topics":["...","...","...","...","...","..."]}`);
-      setSuggestions(JSON.parse(raw).topics || []);
-    } catch(e) { setErr("Could not load suggestions. " + (e.message||"")); }
-    setLoadingSuggestions(false);
-  }
-
-  async function generatePost() {
-    if (!topic.trim()) return;
-    setLoading(true); setPost(null); setErr("");
-    try {
-      const raw = await askClaude(`${CONTEXT}
-
-Write a complete blog post for CuriousLittleRed's website about: "${topic}"
-
-Requirements:
-- Warm, conversational tone — like a homeschool mom talking to another mom
-- 600-800 words
-- Include: intro, 3-5 practical tips or steps, a natural mention of her printables, closing with encouragement
-- SEO-friendly with keywords homeschool moms search for
-- End with a Pinterest-friendly summary (2 sentences max) they can use as a pin description
-
-JSON only: {"title":"...","intro":"...","sections":[{"heading":"...","content":"..."}],"printableMention":"...","closing":"...","pinterestSummary":"..."}`, 2000);
-      setPost(JSON.parse(raw));
-    } catch(e) { setErr("Could not generate — please try again! " + (e.message||"")); }
-    setLoading(false);
-  }
-
-  function copyPost() {
-    if (!post) return;
-    const text = `${post.title}\n\n${post.intro}\n\n${post.sections.map(s=>`${s.heading}\n${s.content}`).join("\n\n")}\n\n${post.printableMention}\n\n${post.closing}\n\n---\nPinterest Summary: ${post.pinterestSummary}`;
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }
-
-  return (
-    <div style={{ padding:"24px 0" }}>
-      <p style={{ color:B.muted, fontSize:14, marginBottom:20 }}>Write blog posts that bring Pinterest moms to your site and naturally lead them to your printables.</p>
-
-      <div style={{ marginBottom:16 }}>
-        <label style={S.label}>Blog Topic</label>
-        <input
-          value={topic}
-          onChange={e=>setTopic(e.target.value)}
-          placeholder="e.g. Easy Montessori activities for toddlers at home"
-          style={S.input}
-          onKeyDown={e=>e.key==="Enter"&&generatePost()}
-        />
-      </div>
-
-      <div style={{ display:"flex", gap:10, flexWrap:"wrap", marginBottom:20 }}>
-        <button onClick={generatePost} disabled={loading||!topic.trim()} style={S.btn()}>✍️ Write Blog Post</button>
-        <button onClick={getSuggestions} disabled={loadingSuggestions} style={S.btn(B.gold)}>💡 Suggest Topics</button>
-      </div>
-
-      <Err msg={err} />
-
-      {loadingSuggestions && <Spinner text="Finding great topics for you..." />}
-
-      {suggestions.length > 0 && (
-        <div style={{ ...S.card, marginBottom:20 }}>
-          <div style={{ fontWeight:700, color:B.dark, fontSize:13, marginBottom:12 }}>💡 Topic Ideas — click one to use it</div>
-          <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-            {suggestions.map((s,i) => (
-              <div key={i} onClick={()=>{ setTopic(s); setSuggestions([]); }} style={{ background:B.cream, border:`1px solid ${B.sand}`, borderRadius:10, padding:"10px 14px", fontSize:13, color:B.dark, cursor:"pointer" }}>
-                {s}
-              </div>
-            ))}
-          </div>
+async function generateMarketing() {
+  const session = document.getElementById('m_session').value;
+  const season = document.getElementById('m_season').value;
+  const goal = document.getElementById('m_goal').value;
+  showLoading('marketingResult');
+  try {
+    const result = await callClaude(`Give Janice C Photography 5 specific marketing ideas for:
+Session: ${session}, Season: ${season}, Goal: ${goal}, Location: Northern Virginia.
+Each idea: specific, actionable, doable from a phone this week. Include where to post, what to say, how to do it.
+Format: IDEA 1: [title] then 2-3 sentences. Direct and practical. No fluff.`);
+    document.getElementById('marketingResult').innerHTML = `
+      <div class="result-card">
+        <div class="result-title">${session} · ${season} · ${goal}</div>
+        <div class="result-body">${result}</div>
+        <div class="result-actions">
+          <button class="btn btn-copy btn-sm" onclick='copyText(${JSON.stringify(result)})'>Copy Ideas</button>
+          <button class="btn btn-outline btn-sm" onclick="generateMarketing()">Try Again</button>
         </div>
-      )}
-
-      {loading && <Spinner text="Writing your blog post..." />}
-
-      {post && (
-        <div style={{ marginTop:10 }}>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
-            <div style={{ fontWeight:700, color:B.dark, fontSize:18 }}>{post.title}</div>
-            <button onClick={copyPost} style={S.btn(copied?B.green:B.red)}>{copied?"✅ Copied!":"📋 Copy All"}</button>
-          </div>
-
-          <div style={{ ...S.card, marginBottom:12 }}>
-            <div style={{ fontWeight:700, color:B.muted, fontSize:11, textTransform:"uppercase", letterSpacing:0.8, marginBottom:8 }}>Intro</div>
-            <div style={{ fontSize:14, color:B.dark, lineHeight:1.7 }}>{post.intro}</div>
-          </div>
-
-          {post.sections?.map((sec,i) => (
-            <div key={i} style={{ ...S.card, marginBottom:12 }}>
-              <div style={{ fontWeight:700, color:B.dark, fontSize:15, marginBottom:8 }}>{sec.heading}</div>
-              <div style={{ fontSize:14, color:"#444", lineHeight:1.7 }}>{sec.content}</div>
-            </div>
-          ))}
-
-          <div style={{ ...S.card, marginBottom:12, borderLeft:`4px solid ${B.red}` }}>
-            <div style={{ fontWeight:700, color:B.red, fontSize:11, textTransform:"uppercase", letterSpacing:0.8, marginBottom:8 }}>Printable Mention</div>
-            <div style={{ fontSize:14, color:B.dark, lineHeight:1.7 }}>{post.printableMention}</div>
-          </div>
-
-          <div style={{ ...S.card, marginBottom:12 }}>
-            <div style={{ fontWeight:700, color:B.muted, fontSize:11, textTransform:"uppercase", letterSpacing:0.8, marginBottom:8 }}>Closing</div>
-            <div style={{ fontSize:14, color:B.dark, lineHeight:1.7 }}>{post.closing}</div>
-          </div>
-
-          <div style={{ background:B.softGold, borderRadius:12, padding:"14px 16px" }}>
-            <div style={{ fontWeight:700, color:B.gold, fontSize:11, textTransform:"uppercase", letterSpacing:0.8, marginBottom:6 }}>📌 Pinterest Summary</div>
-            <div style={{ fontSize:13, color:B.dark, lineHeight:1.6 }}>{post.pinterestSummary}</div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+      </div>`;
+  } catch(e) {
+    document.getElementById('marketingResult').innerHTML = `<div class="result-card"><p style="color:var(--red);font-size:13px">Something went wrong. Try again.</p></div>`;
+  }
 }
 
-// --- APP SHELL ---
-export default function App() {
-  const [active, setActive] = useState("ideas");
-
-  return (
-    <div style={{ minHeight:"100vh", background:B.cream, fontFamily:"'Palatino Linotype', 'Book Antiqua', Palatino, serif" }}>
-      <div style={{ background:`linear-gradient(135deg, ${B.darkRed} 0%, ${B.red} 100%)`, paddingBottom:0, boxShadow:"0 4px 20px rgba(0,0,0,0.2)" }}>
-        <div style={{ maxWidth:740, margin:"0 auto", padding:"18px 20px 0" }}>
-          <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:16 }}>
-            <div style={{ width:44, height:44, background:"#fff", borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, boxShadow:"0 2px 8px rgba(0,0,0,0.2)", flexShrink:0 }}>🍂</div>
-            <div>
-              <div style={{ color:"#fff", fontWeight:700, fontSize:20, lineHeight:1.1 }}>CuriousLittleRed</div>
-              <div style={{ color:"rgba(255,255,255,0.7)", fontSize:11, letterSpacing:0.5 }}>Content Command Center v2 · Built for your 130K Pinterest viewers</div>
-            </div>
-          </div>
-          <div style={{ display:"flex", gap:2, overflowX:"auto", paddingBottom:0 }}>
-            {TABS.map(t=>(
-              <button key={t.id} onClick={()=>setActive(t.id)} style={S.pill(active===t.id)}>
-                {t.icon} {t.label}
-              </button>
-            ))}
-          </div>
+async function generateEmail() {
+  const type = document.getElementById('e_type').value;
+  const session = document.getElementById('e_session').value;
+  const detail = document.getElementById('e_detail').value;
+  showLoading('emailResult');
+  try {
+    const result = await callClaude(`Write a ${type} email for Janice C Photography for a ${session}.
+${detail ? 'Details: ' + detail : ''}
+Rules: From Janice to client. Warm, personal, real. Max 150 words. Start with Hey [Name]! Sign off as Janice. No dashes. Use [brackets] for fill-ins like [date] or [link]. Sound like a text from a friend who happens to be a photographer. Write the email only, no explanation.`);
+    document.getElementById('emailResult').innerHTML = `
+      <div class="result-card">
+        <div class="result-title">${type} · ${session}</div>
+        <div class="script-box"><div class="result-body">${result}</div></div>
+        <div class="result-actions">
+          <button class="btn btn-copy btn-sm" onclick='copyText(${JSON.stringify(result)})'>Copy Email</button>
+          <button class="btn btn-outline btn-sm" onclick="generateEmail()">Try Again</button>
         </div>
-      </div>
-      <div style={{ maxWidth:740, margin:"0 auto", padding:"0 18px 60px" }}>
-        {active==="ideas"     && <IdeasTab />}
-        {active==="carousel"  && <CarouselTab />}
-        {active==="repurpose" && <RepurposeTab />}
-        {active==="pinterest" && <PinterestTab />}
-        {active==="freebie"   && <FreebieTab />}
-        {active==="tracker"   && <TrackerTab />}
-        {active==="blog"      && <BlogTab />}
-      </div>
-    </div>
-  );
+      </div>`;
+  } catch(e) {
+    document.getElementById('emailResult').innerHTML = `<div class="result-card"><p style="color:var(--red);font-size:13px">Something went wrong. Try again.</p></div>`;
+  }
 }
+
+async function generatePrep() {
+  const session = document.getElementById('sp_session').value;
+  const loc = document.getElementById('sp_location').value;
+  const kids = document.getElementById('sp_kids').value;
+  const age = document.getElementById('sp_age').value;
+  const vibe = document.getElementById('sp_vibe').value;
+  const notes = document.getElementById('sp_notes').value;
+  showLoading('prepResult');
+  try {
+    const result = await callClaude(`Write a personal session prep guide for a Janice C Photography client.
+Session: ${session}, Location: ${loc}, Kids: ${kids}, Youngest age: ${age}, Vibe: ${vibe}. ${notes ? 'Notes: ' + notes : ''}
+Write as a friendly message from Janice to the client. Include: what to wear for ${vibe} vibe, arrival time tip, ${kids!=='No kids (mama only)'?`how to prep ${age} kids`:'what to bring'}, what NOT to stress about, one fun thing to look forward to. Start with Hey! So excited for your session! Use you and your kids. Short sections max 2-3 sentences. No dashes. Include [DATE] and [TIME] placeholders.`);
+    document.getElementById('prepResult').innerHTML = `
+      <div class="result-card">
+        <div class="result-title">Prep Guide · ${session}</div>
+        <div class="script-box"><div class="result-body">${result}</div></div>
+        <div class="result-actions">
+          <button class="btn btn-copy btn-sm" onclick='copyText(${JSON.stringify(result)})'>Copy Guide</button>
+          <button class="btn btn-outline btn-sm" onclick="generatePrep()">Try Again</button>
+        </div>
+      </div>`;
+  } catch(e) {
+    document.getElementById('prepResult').innerHTML = `<div class="result-card"><p style="color:var(--red);font-size:13px">Something went wrong. Try again.</p></div>`;
+  }
+}
+
+renderTracker();
+</script>
+</body>
+</html>
