@@ -39,7 +39,26 @@ Voice rules: Write like a real person talking. Short sentences. Simple words. No
 
 Format rules: Use plain text only. No markdown symbols like ##, **, or *. Use ALL CAPS for section headers instead. Separate sections with a blank line.`;
 
+// Variation seeds — picked randomly each call so Claude doesn't repeat itself
+const VARIATION_ANGLES = [
+  "Take a fresh angle. Start differently than you normally would.",
+  "Lead with something unexpected. Don't open the way most people would.",
+  "This time, be a little more direct and less warm. Still friendly, just more to the point.",
+  "Go a bit more personal and story-driven than usual.",
+  "Keep it shorter than you think you need to. Cut anything that isn't essential.",
+  "Be a little more conversational, like you're texting a friend.",
+  "Start with the most interesting part, not the setup.",
+  "Use a different opening word or phrase than Hey or Hi.",
+  "Try a different structure than last time. Mix up the order.",
+  "Be bolder. Say what other photographers won't say.",
+];
+
+function getVariationSeed() {
+  return VARIATION_ANGLES[Math.floor(Math.random() * VARIATION_ANGLES.length)];
+}
+
 async function askClaude(prompt, maxTokens = 1000) {
+  const variation = getVariationSeed();
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -52,7 +71,7 @@ async function askClaude(prompt, maxTokens = 1000) {
       model: "claude-sonnet-4-5",
       max_tokens: maxTokens,
       system: SYSTEM,
-      messages: [{ role: "user", content: prompt }],
+      messages: [{ role: "user", content: `${prompt}\n\nVariation note (follow this): ${variation}` }],
     }),
   });
   if (!res.ok) throw new Error(`API error ${res.status}`);
@@ -529,15 +548,23 @@ Format: Number each idea 1 through 5. Write IDEA TITLE in all caps, then 2 to 3 
 
 function EmailsTab() {
   const [type, setType] = useState("Inquiry Reply");
+  const [useCustomType, setUseCustomType] = useState(false);
+  const [customType, setCustomType] = useState("");
   const [session, setSession] = useState("Mini Session");
   const [detail, setDetail] = useState("");
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  const emailType = useCustomType ? customType : type;
+
   async function generate() {
+    if (useCustomType && !customType.trim()) {
+      alert("Tell me what kind of email you need.");
+      return;
+    }
     setLoading(true); setResult(null);
     try {
-      const text = await askClaude(`Write a ${type} email for Janice C Photography for a ${session}.
+      const text = await askClaude(`Write a ${emailType} email for Janice C Photography for a ${session}.
 ${detail ? "Details: " + detail : ""}
 Rules: From Janice to client. Warm, personal, real. Max 150 words. Start with Hey [Name]! Sign off as Janice. No dashes. Use [brackets] for fill-ins like [date] or [link]. Sound like a text from a friend who happens to be a photographer. Write the email only, no explanation. No markdown symbols.`);
       setResult(text);
@@ -548,12 +575,46 @@ Rules: From Janice to client. Warm, personal, real. Max 150 words. Start with He
   return (
     <div style={S.section}>
       <p style={S.intro}>Ready to send emails in your voice. Copy, tweak the names, send.</p>
+
       <div style={S.formGroup}>
         <label style={S.label}>Email Type</label>
-        <select style={S.select} value={type} onChange={e=>setType(e.target.value)}>
-          {["Inquiry Reply","Booking Confirmation","Session Prep","Gallery Delivery","Review Ask","Referral Ask","Follow Up (no response)","Rescheduling"].map(o=><option key={o}>{o}</option>)}
+        <select
+          style={S.select}
+          value={useCustomType ? "__custom__" : type}
+          onChange={e => {
+            if (e.target.value === "__custom__") {
+              setUseCustomType(true);
+            } else {
+              setUseCustomType(false);
+              setType(e.target.value);
+            }
+          }}
+        >
+          {["Inquiry Reply","Booking Confirmation","Session Prep","Gallery Delivery","Review Ask","Referral Ask","Follow Up (no response)","Rescheduling"].map(o=><option key={o} value={o}>{o}</option>)}
+          <option value="__custom__">Write my own...</option>
         </select>
       </div>
+
+      {useCustomType && (
+        <div style={S.formGroup}>
+          <label style={S.label}>Describe the email you need</label>
+          <textarea
+            style={{...S.textarea, minHeight: 70}}
+            value={customType}
+            onChange={e => setCustomType(e.target.value)}
+            placeholder="e.g. Email to a client who ghosted after I sent the gallery link, checking in without being pushy..."
+          />
+          <div style={{marginTop: 6}}>
+            <button
+              style={{...S.btnSm(), fontSize: 12}}
+              onClick={() => { setUseCustomType(false); setCustomType(""); }}
+            >
+              Back to dropdown
+            </button>
+          </div>
+        </div>
+      )}
+
       <div style={S.formGroup}>
         <label style={S.label}>Session Type</label>
         <select style={S.select} value={session} onChange={e=>setSession(e.target.value)}>
@@ -568,7 +629,7 @@ Rules: From Janice to client. Warm, personal, real. Max 150 words. Start with He
       {loading && <Spinner />}
       {result && result !== "error" && (
         <div style={S.resultCard}>
-          <div style={S.resultTitle}>{type} · {session}</div>
+          <div style={S.resultTitle}>{emailType} · {session}</div>
           <div style={S.scriptBox}><FormattedText text={result} /></div>
           <div style={S.resultActions}>
             <button style={S.btnSm("#1A1A1A", "#FFFFFF")} onClick={()=>copyText(result)}>Copy Email</button>
