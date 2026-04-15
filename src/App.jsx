@@ -123,7 +123,7 @@ const S = {
     cursor: "pointer",
     whiteSpace: "nowrap",
   }),
-  section: { padding: "28px 24px 100px", maxWidth: 720 },
+  section: { padding: "28px 24px 100px", maxWidth: "100%" },
   intro: {
     fontSize: 14,
     color: "#8A7D72",
