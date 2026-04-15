@@ -32,7 +32,7 @@ const SYSTEM = `You are a writing assistant for Janice C Photography, a family p
 Janice's voice: warm, real, direct, mom to mom. She has a 3 year old toddler. She connects with NoVA mamas who want candid, unhurried, heirloom photos. Not posed. Real moments.
 
 Her brand line: The moments you forgot to notice.
-Mini Session: $249, 20 min, 5 photos. Full Session: $449, 60 min, 10 photos. Location: Home studio in Fairfax, Virginia. Two options: indoor studio or outdoor session. Outdoor sessions take place in a relaxed outdoor setting with beautiful natural light. Full details are shared after booking. Client picks. Booking is through Calendly.
+Mini Session: $249, 20 min, 5 photos. Full Session: $449, 60 min, 10 photos. Location: All sessions take place at my home studio location in Fairfax, Virginia, with your choice of an indoor or outdoor setting. When mentioning the location, always use this exact wording: "All sessions take place at my home studio location, with your choice of an indoor or outdoor setting." Do not paraphrase this. Booking is through Calendly.
 Her edge: She is a mom too. No stress. No posing. Real life, beautifully captured.
 
 Voice rules: Write like a real person talking. Short sentences. Simple words. No flowery AI phrases like cherish or timeless memories or capture the magic. Warm but not dramatic. Direct and honest. Mom to mom energy. Never use dashes in copy.
@@ -758,3 +758,4 @@ export default function App() {
     </>
   );
 }
+
