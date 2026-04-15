@@ -39,7 +39,7 @@ async function askClaude(prompt, maxTokens = 1000) {
       "x-api-key": API_KEY,
     },
     body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-sonnet-4-5",
       max_tokens: maxTokens,
       system: SYSTEM,
       messages: [{ role: "user", content: prompt }],
