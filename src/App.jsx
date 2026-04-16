@@ -644,7 +644,7 @@ Rules: From Janice to client. Warm, personal, real. Max 150 words. Start with He
 
 function PrepTab() {
   const [session, setSession] = useState("Mini Session");
-  const [loc, setLoc] = useState("Outdoor Park");
+  const [loc, setLoc] = useState("Home Studio");
   const [kids, setKids] = useState("1 kid");
   const [age, setAge] = useState("Toddler (1-3 years)");
   const [vibe, setVibe] = useState("Light and Airy");
@@ -676,7 +676,7 @@ Write as a friendly message from Janice to the client. Include: what to wear for
         <div style={{...S.formGroup, flex:1}}>
           <label style={S.label}>Location</label>
           <select style={S.select} value={loc} onChange={e=>setLoc(e.target.value)}>
-            {["Outdoor Park","Home Studio","Backyard","Urban / Downtown","Beach / Waterfront"].map(o=><option key={o}>{o}</option>)}
+            {["Home Studio","Backyard"].map(o=><option key={o}>{o}</option>)}
           </select>
         </div>
       </div>
